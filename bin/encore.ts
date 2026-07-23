@@ -59,6 +59,7 @@ if (runtimeConfig.useDevServer) {
             'webpack-dev-server',
             'the webpack Development Server'
         );
+        featuresHelper.ensureDevServerVersionRequirements();
     } catch (e) {
         console.log(e);
         process.exit(1);
@@ -67,7 +68,10 @@ if (runtimeConfig.useDevServer) {
     console.log('Running webpack-dev-server ...');
     console.log();
 
-    await import('webpack-dev-server/bin/webpack-dev-server.js');
+    // webpack-dev-server's own bin was deprecated in v5 and removed from the
+    // package "exports" in v6; the supported entrypoint is `webpack serve`.
+    process.argv.splice(2, 0, 'serve');
+    await import('webpack/bin/webpack.js');
 } else {
     if (!runtimeConfig.outputJson) {
         console.log('Running webpack ...');
