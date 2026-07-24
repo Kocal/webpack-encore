@@ -10,9 +10,11 @@
 import FriendlyErrorsWebpackPlugin from '@kocal/friendly-errors-webpack-plugin';
 
 import missingCssFileFormatter from '../friendly-errors/formatters/missing-css-file.js';
+import missingDependencyFormatter from '../friendly-errors/formatters/missing-dependency.js';
 import missingLoaderFormatter from '../friendly-errors/formatters/missing-loader.js';
 import missingPostCssConfigFormatter from '../friendly-errors/formatters/missing-postcss-config.js';
 import missingCssFileTransformer from '../friendly-errors/transformers/missing-css-file.js';
+import missingDependencyTransformer from '../friendly-errors/transformers/missing-dependency.js';
 import missingLoaderTransformerFactory from '../friendly-errors/transformers/missing-loader.js';
 import missingPostCssConfigTransformer from '../friendly-errors/transformers/missing-postcss-config.js';
 import applyOptionsCallback from '../utils/apply-options-callback.js';
@@ -25,11 +27,13 @@ export default function (webpackConfig: WebpackConfig) {
             missingCssFileTransformer,
             missingLoaderTransformerFactory(webpackConfig),
             missingPostCssConfigTransformer,
+            missingDependencyTransformer,
         ],
         additionalFormatters: [
             missingCssFileFormatter,
             missingLoaderFormatter,
             missingPostCssConfigFormatter,
+            missingDependencyFormatter,
         ],
         compilationSuccessInfo: {
             messages: [],
