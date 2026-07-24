@@ -4,6 +4,7 @@
 
 - Migrate internal code to TypeScript, ship package with type definitions (better DX and IDE support!)
 - Improve the typing of the configuration methods (`enableSassLoader()`, `configureDevServerOptions()`, `enableVueLoader()`, `configureBabelPresetEnv()`, etc.): options now resolve to the real loader/plugin types, giving full autocompletion and validation in your `webpack.config`
+- Add support for `webpack-dev-server` ^6.0.0 (requires `webpack` ^5.102.0 and `webpack-cli` ^7.0.2)
 
 ## 7.1.0
 

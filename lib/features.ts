@@ -7,7 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import type { PackagesConfig } from './package-helper.js';
+import semver from 'semver';
+
+import type { PackageConfig, PackagesConfig } from './package-helper.js';
 import packageHelper from './package-helper.js';
 
 interface Feature {
@@ -176,6 +178,14 @@ function getFeatureConfig(featureName: string): Feature {
     return config;
 }
 
+// webpack-dev-server 6 needs newer webpack/webpack-cli than our peerDependencies
+// require; those can't be bumped in a minor, so enforce them only when wds 6+ is
+// actually installed.
+const devServer6Requirements: PackageConfig[] = [
+    { name: 'webpack', version: '^5.102.0' },
+    { name: 'webpack-cli', version: '^7.0.2' },
+];
+
 export default {
     ensurePackagesExistAndAreCorrectVersion: function (
         featureName: string,
@@ -204,5 +214,36 @@ export default {
 
     getFeatureDescription: function (featureName: string): string {
         return getFeatureConfig(featureName).description;
+    },
+
+    ensureDevServerVersionRequirements: function (): void {
+        const devServerVersion = packageHelper.getPackageVersion('webpack-dev-server');
+        if (devServerVersion === null || !semver.satisfies(devServerVersion, '>=6.0.0')) {
+            return;
+        }
+
+        const outdated = devServer6Requirements
+            .map((pkg) => ({ ...pkg, installed: packageHelper.getPackageVersion(pkg.name) }))
+            .filter(
+                (pkg) => pkg.installed !== null && !semver.satisfies(pkg.installed, pkg.version!)
+            );
+
+        if (outdated.length === 0) {
+            return;
+        }
+
+        const installCommand = packageHelper.getInstallCommand(
+            outdated.map((pkg) => [{ name: pkg.name, version: pkg.version }])
+        );
+        const details = outdated
+            .map((pkg) => `  - ${pkg.name}: installed ${pkg.installed}, required ${pkg.version}`)
+            .join('\n');
+
+        throw `
+webpack-dev-server ${devServerVersion} requires webpack ^5.102.0 and webpack-cli ^7.0.2.
+${details}
+Please upgrade:
+  ${installCommand}
+`;
     },
 };
