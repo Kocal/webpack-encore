@@ -60,9 +60,19 @@ ${missingPackagesRecommendation.message}
     }
 }
 
+function getPackageManager(): 'pnpm' | 'yarn' | 'npm' {
+    if (fs.existsSync('pnpm-lock.yaml')) {
+        return 'pnpm';
+    }
+
+    if (fs.existsSync('yarn.lock')) {
+        return 'yarn';
+    }
+
+    return 'npm';
+}
+
 function getInstallCommand(packageConfigs: PackageConfig[][]): string {
-    const hasPnpmLockfile = fs.existsSync('pnpm-lock.yaml');
-    const hasYarnLockfile = fs.existsSync('yarn.lock');
     const packageInstallStrings = packageConfigs.map((packageConfig) => {
         const firstPackage = packageConfig[0]!;
 
@@ -80,15 +90,31 @@ function getInstallCommand(packageConfigs: PackageConfig[][]): string {
         return `${firstPackage.name}@${recommendedVersion}`;
     });
 
-    if (hasPnpmLockfile) {
-        return pc.yellow(`pnpm add ${packageInstallStrings.join(' ')} --save-dev`);
+    const packages = packageInstallStrings.join(' ');
+    switch (getPackageManager()) {
+        case 'pnpm':
+            return pc.yellow(`pnpm add ${packages} --save-dev`);
+        case 'yarn':
+            return pc.yellow(`yarn add ${packages} --dev`);
+        default:
+            return pc.yellow(`npm install ${packages} --save-dev`);
     }
+}
 
-    if (hasYarnLockfile) {
-        return pc.yellow(`yarn add ${packageInstallStrings.join(' ')} --dev`);
+/**
+ * Returns the command to install already-published packages (e.g. a missing
+ * dependency required by the user), respecting the package manager in use.
+ */
+function getMissingPackagesInstallCommand(packageNames: string[]): string {
+    const packages = packageNames.join(' ');
+    switch (getPackageManager()) {
+        case 'pnpm':
+            return pc.yellow(`pnpm add ${packages}`);
+        case 'yarn':
+            return pc.yellow(`yarn add ${packages}`);
+        default:
+            return pc.yellow(`npm install ${packages}`);
     }
-
-    return pc.yellow(`npm install ${packageInstallStrings.join(' ')} --save-dev`);
 }
 
 function isPackageInstalled(packageConfig: PackageConfig): boolean {
@@ -240,5 +266,6 @@ export default {
     getInvalidPackageVersionRecommendations,
     addPackagesVersionConstraint,
     getInstallCommand,
+    getMissingPackagesInstallCommand,
     getPackageVersion,
 };

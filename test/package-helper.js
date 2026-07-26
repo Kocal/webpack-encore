@@ -107,6 +107,32 @@ describe('package-helper', function () {
         });
     });
 
+    describe('getMissingPackagesInstallCommand respects the package manager', function () {
+        const baseCwd = process.cwd();
+
+        afterAll(function () {
+            process.chdir(baseCwd);
+        });
+
+        it('uses "npm install" without any lock file', function () {
+            process.chdir(path.join(import.meta.dirname, '../fixtures/package-helper/empty'));
+            const command = packageHelper.getMissingPackagesInstallCommand(['foo', 'bar']);
+            expect(stripAnsi(command)).toBe('npm install foo bar');
+        });
+
+        it('uses "yarn add" with yarn.lock', function () {
+            process.chdir(path.join(import.meta.dirname, '../fixtures/package-helper/yarn'));
+            const command = packageHelper.getMissingPackagesInstallCommand(['foo', 'bar']);
+            expect(stripAnsi(command)).toBe('yarn add foo bar');
+        });
+
+        it('uses "pnpm add" with pnpm-lock.yaml', function () {
+            process.chdir(path.join(import.meta.dirname, '../fixtures/package-helper/pnpm'));
+            const command = packageHelper.getMissingPackagesInstallCommand(['foo', 'bar']);
+            expect(stripAnsi(command)).toBe('pnpm add foo bar');
+        });
+    });
+
     describe('check messaging on install commands', function () {
         it('Make sure the major version is included in the install command', function () {
             const packageRecommendations = packageHelper.getMissingPackageRecommendations([
